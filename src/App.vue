@@ -4,12 +4,24 @@
       <h2>Budget Calculator</h2>
     </div>
     <div class="budget_container">
-      <h1 class="budget">0</h1>
+      <h1 class="budget" :style="`${balance < 0 ? 'color:  red' : ''}`">
+        {{ balance }}
+      </h1>
     </div>
     <div>
-      <form class="input_boxes">
-        <input type="number" placeholder="Cost" />
-        <input type="text" placeholder="Description" />
+      <form class="input_boxes" @submit.prevent="submitForm">
+        <input
+          required
+          type="number"
+          v-model="budget.amount"
+          placeholder="Cost"
+        />
+        <input
+          required
+          type="text"
+          v-model="budget.description"
+          placeholder="Description"
+        />
         <button type="submit">Add</button>
       </form>
     </div>
@@ -17,19 +29,29 @@
       <div class="income">
         <h2>Income</h2>
         <ul class="income_list">
-          <li>
-            Buying
+          <li v-for="(income, i) in incomes" :key="i">
+            <div>
+              <span> {{ income.description }}</span>
 
-            <span><ion-icon name="close-outline"></ion-icon></span>
+              <span class="amount" style="background: green">{{
+                income.amount
+              }}</span>
+            </div>
+            <span class="delete_btn" @click="deleteIncome(i)">&times;</span>
           </li>
         </ul>
       </div>
       <div class="expenses">
         <h2>Expenses</h2>
         <ul class="expenses_list">
-          <li>
-            Buying
-            <span><ion-icon name="close-outline"></ion-icon></span>
+          <li v-for="(expense, i) in expenses" :key="i">
+            <div>
+              <span> {{ expense.description }}</span>
+              <span class="amount" style="background: red">{{
+                expense.amount
+              }}</span>
+            </div>
+            <span class="delete_btn" @click="deleteExpenses(i)">&times;</span>
           </li>
         </ul>
       </div>
@@ -40,7 +62,42 @@
 <script>
 export default {
   data() {
-    return {};
+    return {
+      balance: 0,
+      incomes: [],
+      expenses: [],
+
+      budget: {
+        amount: 0,
+        description: "",
+      },
+    };
+  },
+
+  methods: {
+    submitForm() {
+      let amount = parseInt(this.budget.amount);
+
+      if (amount < 0) {
+        this.expenses.push(this.budget);
+      } else {
+        this.incomes.push(this.budget);
+      }
+      this.balance += amount;
+      this.budget = {
+        amount: 0,
+        description: "",
+      };
+    },
+    deleteIncome(index) {
+      this.balance -= this.incomes[index].amount;
+      this.incomes.splice(index, 1);
+    },
+
+    deleteExpenses(index) {
+      this.balance -= this.expenses[index].amount;
+      this.expenses.splice(index, 1);
+    },
   },
 };
 </script>
@@ -62,7 +119,6 @@ $light: rgba(255, 255, 255, 0.932);
   flex-direction: column;
 
   width: 100%;
-
   font-family: "Roboto", sans-serif;
 
   .headline {
@@ -83,6 +139,9 @@ $light: rgba(255, 255, 255, 0.932);
       margin-right: 5px;
       border: 2px solid rgba(221, 220, 220, 0.548);
       box-shadow: 2px 2px 2px rgba(179, 177, 177, 0.685);
+    }
+    input:focus {
+      outline: none;
     }
     input[type="number"] {
       width: 100px;
@@ -135,15 +194,26 @@ $light: rgba(255, 255, 255, 0.932);
         padding: 10px;
         box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         cursor: pointer;
+        font-size: 17px;
+
+        div {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          .amount {
+            padding: 5px;
+            color: $light;
+          }
+        }
 
         &:hover {
           box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
-          span {
+          .delete_btn {
             opacity: 1;
           }
         }
 
-        span {
+        .delete_btn {
           position: absolute;
           width: 30px;
           height: 30px;
