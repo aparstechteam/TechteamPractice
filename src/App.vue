@@ -28,7 +28,7 @@
     <div class="budget_calculations">
       <div class="income">
         <h2>Income</h2>
-        <ul class="income_list">
+        <ul class="income_list" v-if="income">
           <li v-for="(income, i) in incomes" :key="i">
             <div>
               <span> {{ income.description }}</span>
@@ -40,10 +40,13 @@
             <span class="delete_btn" @click="deleteIncome(i)">&times;</span>
           </li>
         </ul>
+        <div v-else>
+          <h3 class="budget_warning">No income added yet.</h3>
+        </div>
       </div>
       <div class="expenses">
         <h2>Expenses</h2>
-        <ul class="expenses_list">
+        <ul class="expenses_list" v-if="expenses.length > 0">
           <li v-for="(expense, i) in expenses" :key="i">
             <div>
               <span> {{ expense.description }}</span>
@@ -54,6 +57,9 @@
             <span class="delete_btn" @click="deleteExpenses(i)">&times;</span>
           </li>
         </ul>
+        <div v-else>
+          <h3 class="budget_warning">No expenses added yet.</h3>
+        </div>
       </div>
     </div>
   </div>
@@ -182,9 +188,19 @@ $light: rgba(255, 255, 255, 0.932);
     gap: 10px;
     .income {
       width: 250px;
+      h2 {
+        color: $green;
+      }
     }
     .expenses {
       width: 250px;
+      h2 {
+        color: rgba(236, 19, 66, 0.726);
+      }
+    }
+    .budget_warning {
+      margin-top: 20px;
+      color: rgba(0, 0, 0, 0.5);
     }
     ul {
       list-style-type: none;
