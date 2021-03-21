@@ -8,27 +8,13 @@
         {{ balance }}
       </h1>
     </div>
-    <div>
-      <form class="input_boxes" @submit.prevent="submitForm">
-        <input
-          required
-          type="number"
-          v-model="budget.amount"
-          placeholder="Cost"
-        />
-        <input
-          required
-          type="text"
-          v-model="budget.description"
-          placeholder="Description"
-        />
-        <button type="submit">Add</button>
-      </form>
-    </div>
+    <!-- Budget form -->
+    <BudgetForm @submitForm="submitForm" />
+
     <div class="budget_calculations">
       <div class="income">
         <h2>Income</h2>
-        <ul class="income_list" v-if="income">
+        <ul class="income_list" v-if="incomes.length > 0">
           <li v-for="(income, i) in incomes" :key="i">
             <div>
               <span> {{ income.description }}</span>
@@ -37,7 +23,9 @@
                 income.amount
               }}</span>
             </div>
-            <span class="delete_btn" @click="deleteIncome(i)">&times;</span>
+            <span class="delete_btn" @click="deleteBudget(income.id)"
+              >&times;</span
+            >
           </li>
         </ul>
         <div v-else>
@@ -54,7 +42,9 @@
                 expense.amount
               }}</span>
             </div>
-            <span class="delete_btn" @click="deleteExpenses(i)">&times;</span>
+            <span class="delete_btn" @click="deleteBudget(expense.id)"
+              >&times;</span
+            >
           </li>
         </ul>
         <div v-else>
@@ -66,44 +56,52 @@
 </template>
 
 <script>
+import BudgetForm from "@/components/BudgetForm";
+import { db } from "@/plugins/firebase";
 export default {
+  components: { BudgetForm },
+
   data() {
     return {
       balance: 0,
       incomes: [],
       expenses: [],
-
-      budget: {
-        amount: 0,
-        description: "",
-      },
     };
   },
 
   methods: {
-    submitForm() {
-      let amount = parseInt(this.budget.amount);
+    submitForm(budget) {
+      let amount = parseInt(amount);
 
       if (amount < 0) {
-        this.expenses.push(this.budget);
+        db.collection("budgets").add({ ...budget, type: "expense" });
       } else {
-        this.incomes.push(this.budget);
+        db.collection("budgets").add({ ...budget, type: "income" });
       }
-      this.balance += amount;
-      this.budget = {
-        amount: 0,
-        description: "",
-      };
     },
-    deleteIncome(index) {
-      this.balance -= this.incomes[index].amount;
-      this.incomes.splice(index, 1);
+    getFromFirebase() {
+      db.collection("budgets").onSnapshot((docs) => {
+        this.expenses = [];
+        this.incomes = [];
+        this.balance = 0;
+        docs.forEach((doc) => {
+          let budget = doc.data();
+          let amount = parseInt(budget.amount);
+          if (amount < 0) {
+            this.expenses.push({ id: doc.id, ...budget });
+          } else {
+            this.incomes.push({ id: doc.id, ...budget });
+          }
+          this.balance += amount;
+        });
+      });
     },
-
-    deleteExpenses(index) {
-      this.balance -= this.expenses[index].amount;
-      this.expenses.splice(index, 1);
+    deleteBudget(id) {
+      db.collection("budgets").doc(id).delete();
     },
+  },
+  created() {
+    this.getFromFirebase();
   },
 };
 </script>
